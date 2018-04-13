@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE suppressions PUBLIC
+    "-//Puppy Crawl//DTD Suppressions 1.1//EN"
+    "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+
+<suppressions>
+  <!-- ignore Javadoc -->
+  <suppress checks="Javadoc.*" files="org[\\/]jlab[\\/]clara[\\/]base[\\/]core"/>
+  <suppress checks="Javadoc.*" files="org[\\/]jlab[\\/]clara[\\/]base[\\/]logging"/>
+  <suppress checks="Javadoc.*" files="org[\\/]jlab[\\/]clara[\\/]sys[\\/]ccc"/>
+  <suppress checks="Javadoc.*" files="org[\\/]jlab[\\/]clara[\\/]util"/>
+  <suppress checks="Javadoc.*" files=".*Test\.java"/>
+</suppressions>

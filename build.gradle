@@ -1,0 +1,255 @@
+plugins {
+    id 'java'
+    id 'maven'
+
+    id 'checkstyle'
+    id 'findbugs'
+
+    id 'eclipse'
+    id 'idea'
+}
+group = 'org.jlab.clas12.mon'
+archivesBaseName = 'ElectronMonEngine'
+version = '1.0-SNAPSHOT'
+
+defaultTasks 'build'
+
+compileJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+}
+
+configurations {
+    all {
+        resolutionStrategy.cacheChangingModulesFor 30, 'minutes'
+    }
+    deployerJars
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+}
+
+repositories {
+    flatDir {
+        dirs 'lib'
+    }
+    maven {
+        url 'http://clasweb.jlab.org/clas12maven/'
+    }
+    maven {
+        url 'http://repo1.maven.org/maven2'
+    }
+}
+
+dependencies {
+    compileOnly 'org.jlab.clara.clas12:clas-clara-engine:1.0-SNAPSHOT'
+    compileOnly 'org.jlab.coda:jclara:4.3-SNAPSHOT'
+    compile 'org.jlab.coat:coat-libs:5.1-SNAPSHOT'
+    compile 'org.jlab.coda:xmsg:2.3'
+    compile 'org.yaml:snakeyaml:1.18'
+    compile 'org.json:json:20160810'
+    compile 'org.apache.commons:commons-exec:1.3'
+    compile 'org.freemarker:freemarker:2.3.26-incubating'
+    compile 'net.sf.jopt-simple:jopt-simple:4.9'
+    compile 'com.google.code.findbugs:jsr305:3.0.1'
+    compile 'org.jlab.coda:jinflux:1.0-SNAPSHOT'
+    deployerJars 'org.apache.maven.wagon:wagon-ssh-external:2.12'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.hamcrest:hamcrest-library:1.3'
+    testCompile 'org.mockito:mockito-core:1.10.19'
+}
+
+javadoc {
+    options.charSet = 'utf8'
+    options.encoding = 'utf8'
+    options.docEncoding = 'utf8'
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+
+if (!hasProperty('localPublicationRepo')) {
+    ext.localPublicationRepo = 'file://localhost/tmp/repo'
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: localPublicationRepo)
+            configuration = configurations.deployerJars
+            repository(url: 'scpexe://ifarm65.jlab.org/group/clas/www/clasweb/html/clas12maven') {
+                authentication(userName: 'clas12')
+            }
+        }
+    }
+}
+
+def deploySpec = copySpec {
+    into ('plugins/clas12/lib/services') {
+        from jar.archivePath
+    }
+
+    from ('scripts') {
+        into 'bin'
+        exclude 'etc'
+        fileMode 0755
+    }
+
+    from ('scripts/lib') {
+        into 'lib/clara'
+        fileMode 0755
+    }
+
+    // trick Gradle to "create" empy directories
+    def tempDir = "${buildDir}/distributions/clara_home"
+
+    file("${tempDir}/log").mkdirs()
+    file("${tempDir}/plugins").mkdirs()
+
+    from tempDir
+}
+
+task distSources(type: Tar, dependsOn: build) {
+    extension = 'tar.gz'
+    classifier = 'src'
+    compression = Compression.GZIP
+
+    into "${baseName}-${version}-${classifier}"
+
+    from 'README.md'
+    from 'build.gradle'
+    from 'gradlew'
+    from 'gradlew.bat'
+
+    from ('gradle') {
+        into 'gradle'
+    }
+    from ('scripts') {
+        into 'scripts'
+    }
+    from ('src') {
+        into 'src'
+    }
+}
+
+task deploy(type: Copy, overwrite: true, dependsOn: jar) {
+    def dest = "$System.env.CLARA_HOME"
+
+    into dest
+    with deploySpec
+
+    doFirst {
+        if (dest == 'null') {
+            throw new GradleException('CLARA_HOME not set')
+        }
+    }
+}
+
+ext.classPathCache = file("${buildDir}/tmp/classpath")
+ext.testClassPathCache = file("${buildDir}/tmp/test_classpath")
+
+task cacheClasspath {
+    doLast {
+        if (!classPathCache.isFile()) {
+            classPathCache.parentFile.mkdirs()
+            classPathCache.createNewFile()
+        }
+        classPathCache.write sourceSets.main.runtimeClasspath.asPath
+        testClassPathCache.write sourceSets.test.runtimeClasspath.asPath
+    }
+}
+cacheClasspath.inputs.files sourceSets.main.runtimeClasspath
+cacheClasspath.inputs.files sourceSets.test.runtimeClasspath
+cacheClasspath.outputs.files classPathCache
+cacheClasspath.outputs.files testClassPathCache
+
+task printClasspath {
+    doLast {
+        println classPathCache.text
+    }
+}
+
+build.dependsOn cacheClasspath
+printClasspath.dependsOn cacheClasspath
+
+def ciMode() {
+    if (hasProperty("ciMode")) {
+        return ciMode.toBoolean()
+    }
+    return false
+}
+
+checkstyle {
+    toolVersion = '8.0'
+    configFile = file('config/quality/checkstyle.xml')
+    configProperties['samedir'] = file('config/quality')
+}
+
+findbugs {
+    toolVersion = '3.0.1'
+    ignoreFailures = true
+    effort = 'max'
+    reportLevel = 'medium'
+    excludeFilter = file('config/quality/findbugs-exclude.xml')
+}
+
+tasks.withType(FindBugs) {
+    def useXml = ciMode()
+    reports {
+        xml.enabled = useXml
+        html.enabled = !xml.enabled
+    }
+}
+
+// Marker task to enable findbugs.
+task findbugs(
+        group: 'Verification',
+        description: 'Marker task to enabled findbugs.'
+)
+
+task checkFindBugsResults {
+    doLast {
+        def bugsFound = 0
+        [findbugsMain, findbugsTest].forEach {
+            bugsFound += printFindBugs it.reports.xml.destination
+        }
+        if (bugsFound > 0) {
+            throw new GradleException("$bugsFound FindBugs rule violations were found.")
+        }
+    }
+}
+
+def printFindBugs(File xml) {
+    def slurped = new XmlSlurper().parse(xml)
+    def bugs = slurped.BugInstance
+
+    bugs.each { bug ->
+        def line = bug.SourceLine
+        logger.error "[FindBugs] ${line.@sourcepath}:${line.@start}:${line.@end} [${bug.@type}]"
+    }
+    bugs.size()
+}
+
+eclipse {
+    classpath {
+        defaultOutputDir = file("${buildDir}/eclipse-classes")
+    }
+}
