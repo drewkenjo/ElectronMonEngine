@@ -24,7 +24,7 @@ public class NumberOfElectrons extends MonitoringEngine {
     private Map<List<Integer>, AtomicInteger> nelectrons = new ConcurrentHashMap<>();
     private Map<List<Integer>, AtomicInteger> ntriggers = new ConcurrentHashMap<>();
     AtomicInteger nprocessed = new AtomicInteger(0);
-    private final int nintegration = 3000;
+    private final int nintegration = 10000;
 
     /**
      * Constructor.
@@ -93,7 +93,7 @@ public class NumberOfElectrons extends MonitoringEngine {
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));
 
-            submit(nrates);
+            submit("mon", nrates);
         }
         return true;
     }

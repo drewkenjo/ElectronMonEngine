@@ -6,6 +6,7 @@
 package org.jlab.clas12.mon;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -80,12 +81,12 @@ public abstract class MonitoringEngine extends ReconstructionEngine {
         }
     }
 
-    public void submit(List<Map<String, String>> entryList) {
+    public void submit(String dbname, List<Map<String, String>> entryList) {
 //        System.out.println(gson.toJson(entryList, List.class));
 
         if (!entryList.isEmpty()) {
             try {
-                URL url = new URL("https://clas12mon.jlab.org/mondb/data");
+                URL url = new URL("https://clas12mon.jlab.org/mondb/data/"+dbname);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
                 con.setDoOutput(true);
                 con.setRequestMethod("PUT");
@@ -95,6 +96,7 @@ public abstract class MonitoringEngine extends ReconstructionEngine {
                 fwriter.flush();
                 fwriter.close();
 
+		System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(entryList));
                 System.out.println(con.getResponseCode());
                 System.out.println(con.getResponseMessage());
             } catch (IOException ex) {
