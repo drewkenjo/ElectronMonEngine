@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.jlab.clas12.mon;
+package org.jlab.clas12.mon.dc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataBank;
 import java.util.Collections;
+import org.jlab.clas12.mon.MonitoringEngine;
+
 /**
  *
  * @author kenjo
@@ -40,28 +42,17 @@ public class DCmonitoring extends MonitoringEngine {
             DataBank runbank = event.getBank("RUN::config");
             DataBank tbbank = event.getBank("TimeBasedTrkg::TBHits");
 
-            List<Integer> keys = new ArrayList<>(4);
-            keys.add(runbank.getInt("run", 0));
-            keys.add((runbank.getInt("unixtime", 0) / 60) * 60);
-            keys.add(0);
-            keys.add(0);
+            String key0 = runbank.getInt("run", 0)+",0,";
 
 		  int nrows = tbbank.rows();
             for (int ipart = 0; ipart < nrows; ipart++) {
                 int sec = tbbank.getByte("sector", ipart);
                 int superlayer = tbbank.getByte("superlayer", ipart);
-                keys.set(2, sec);
-                keys.set(3, superlayer);
-                String keystr = keys.toString();
+			 String keystr = key0 + sec + "," + superlayer;
 
-			 residual.computeIfAbsent(keystr, k -> new DoubleAdder());
-                residual.get(keystr).add(tbbank.getFloat("timeResidual", ipart));
-
-			 nentries.computeIfAbsent(keystr, k -> new DoubleAdder());
-                nentries.get(keystr).add(1);
-
-			 trkdoca.computeIfAbsent(keystr, k -> new DoubleAdder());
-                trkdoca.get(keystr).add(tbbank.getFloat("trkDoca", ipart));
+			 nentries.computeIfAbsent(keystr, k -> new DoubleAdder()).add(1);
+			 residual.computeIfAbsent(keystr, k -> new DoubleAdder()).add(tbbank.getFloat("timeResidual", ipart));
+			 trkdoca.computeIfAbsent(keystr, k -> new DoubleAdder()).add(tbbank.getFloat("trkDoca", ipart));
             }
         }
 
@@ -73,7 +64,7 @@ public class DCmonitoring extends MonitoringEngine {
                     .map(key -> {
                         Map<String, String> ndc = new HashMap<>();
                         if (nentries.containsKey(key) && nentries.get(key).doubleValue() > 100) {
- 			             String[] keys = key.substring(1, key.length()-1).split(", ");
+ 			             String[] keys = key.split(",");
                             ndc.put("run", keys[0]);
                             ndc.put("time", keys[1]);
                             double denom = (double) nentries.get(key).doubleValue();

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.jlab.clas12.mon;
+package org.jlab.clas12.mon.forward;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,22 +14,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataBank;
+import org.jlab.clas12.mon.MonitoringEngine;
+import org.jlab.detector.base.DetectorType;
 
 /**
  *
  * @author kenjo
  */
-public class NumberOfElectrons extends MonitoringEngine {
+public class NumberOfNegatives extends MonitoringEngine {
 
-    private Map<List<Integer>, AtomicInteger> nelectrons = new ConcurrentHashMap<>();
-    private Map<List<Integer>, AtomicInteger> ntriggers = new ConcurrentHashMap<>();
+    private Map<String, AtomicInteger> nnegatives = new ConcurrentHashMap<>();
+    private Map<String, AtomicInteger> ntriggers = new ConcurrentHashMap<>();
     AtomicInteger nprocessed = new AtomicInteger(0);
     private final int nintegration = 10000;
 
     /**
      * Constructor.
      */
-    public NumberOfElectrons() {
+    public NumberOfNegatives() {
     }
 
     @Override
@@ -42,28 +44,23 @@ public class NumberOfElectrons extends MonitoringEngine {
             int nrows = pbank.rows();
             int[] sector = new int[nrows];
             for (int ical = 0; ical < calbank.rows(); ical++) {
-                int pindex = calbank.getShort("pindex", ical);
-                sector[pindex] = calbank.getByte("sector", ical);
+			 int idet = calbank.getByte("detector", ical);
+			 if(idet == DetectorType.ECAL.getDetectorId()){
+                     int ilay = calbank.getByte("layer", ical);
+                     if (ilay == 1 || ilay == 4 || ilay == 7) {
+	                	int pindex = calbank.getShort("pindex", ical);
+ 	    	           	sector[pindex] = calbank.getByte("sector", ical);
+				 }
+			 }
             }
 
-            List<Integer> keys = new ArrayList<>(3);
-            keys.add(runbank.getInt("run", 0));
-            keys.add((runbank.getInt("unixtime", 0) / 60) * 60);
-            keys.add(0);
-
-            if (!ntriggers.containsKey(keys)) {
-                ntriggers.put(keys, new AtomicInteger(0));
-            }
-            ntriggers.get(keys).incrementAndGet();
+            String keys = runbank.getInt("run", 0)+",0,";
+            ntriggers.computeIfAbsent(keys, k -> new AtomicInteger(0)).incrementAndGet();
 
             for (int ipart = 0; ipart < nrows; ipart++) {
-                int pid = pbank.getInt("pid", ipart);
-                if (pid == 11 && sector[ipart] > 0) {
-                    keys.set(2, sector[ipart]);
-                    if (!nelectrons.containsKey(keys)) {
-                        nelectrons.put(keys, new AtomicInteger(0));
-                    }
-                    nelectrons.get(keys).incrementAndGet();
+                int charge= pbank.getByte("charge", ipart);
+                if (charge<0 && sector[ipart] > 0) {
+          		nnegatives.computeIfAbsent(keys+sector[ipart], k -> new AtomicInteger(0)).incrementAndGet();
                 }
             }
         }
@@ -73,27 +70,26 @@ public class NumberOfElectrons extends MonitoringEngine {
 
             List<Map<String, String>> nrates = ntriggers.keySet().stream()
                     .map(key -> {
-                        Map<String, String> nele = new HashMap<>();
+                        Map<String, String> nneg = new HashMap<>();
                         if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
-                            nele.put("run", Integer.toString(key.get(0)));
-                            nele.put("time", Integer.toString(key.get(1)));
-                            List<Integer> elekey = new ArrayList<>(key);
+					   String[] keys = key.split(",");
+                            nneg.put("run", keys[0]);
+                            nneg.put("time", keys[1]);
                             float denom = ntriggers.get(key).get();
                             for (int isec = 1; isec <= 6; isec++) {
-                                elekey.set(2, isec);
-                                if (nelectrons.containsKey(elekey)) {
-                                    nele.put("nele" + isec, Float.toString(nelectrons.get(elekey).get() / denom));
+                                if (nnegatives.containsKey(key+isec)) {
+                                    nneg.put("nneg" + isec, Float.toString(nnegatives.get(key+isec).get() / denom));
                                 }
                             }
                         }
-                        return nele;
+                        return nneg;
                     })
-                    .filter(nele -> nele.keySet().size() > 2)
+                    .filter(nneg -> nneg.keySet().size() > 2)
                     .collect(Collectors.toList());
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));
 
-            submit("mon", nrates);
+            submit("monneg", nrates);
         }
         return true;
     }
