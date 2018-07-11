@@ -17,6 +17,7 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataBank;
 import java.util.Collections;
 import org.jlab.clas12.mon.MonitoringEngine;
+import org.jlab.clas12.mon.Monitoring;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -46,7 +47,8 @@ public class FTOFmonitoring extends MonitoringEngine {
             DataBank evbank = event.getBank("REC::Event");
             DataBank scbank = event.getBank("REC::Scintillator");
 
-            String keys = runbank.getInt("run", 0) + ",0,";
+		  int run = runbank.getInt("run", 0);
+            String keys = run + ",0,";
             //keys.add((runbank.getInt("unixtime", 0) / 60) * 60);
 
 		  for(int isc=0;isc<scbank.rows();isc++){
@@ -60,33 +62,16 @@ public class FTOFmonitoring extends MonitoringEngine {
 					sttime = time - path/30;
 
                     	float rftime = evbank.getFloat("RFTime",0);
-					//System.out.println(sttime-rftime);
 
-					hstart.computeIfAbsent(keys+sec, k -> new H1F("h1",1000,-2,2)).fill((sttime - rftime + 1.002)%2.004-1.002);
+					hstart.computeIfAbsent(keys+sec, k -> new H1F("hftofmon"+run+"s"+sec,1000,-2,2)).fill((sttime - rftime + 1.002)%2.004-1.002);
 				}
 				break;
 			}
 		  }
 	   }
 
-        //we lose the last chunk of events. Need to ask Vardan how to check if it's the last event (problematic in parallel mode)a
-
+        //we lose the last chunk of events. Need to ask Vardan how to check if it's the last event (problematic in parallel mode)
         if (nprocessed.incrementAndGet() % nintegration == 0) {
-/*
-    			f1.setParameter(0, 100.0);
-			f1.setParameter(1, 0.0);
-		     f1.setParameter(2, 1.0);
-			DataFitter.fit(f1, h1,"Q");
-
-			try{
-				BufferedWriter writer = new BufferedWriter(new FileWriter("/home/kenjo/h1.txt"));
-				writer.write(h1.toString());
-//				writer.write(" "+f1.getParameter(1)+" "+f1.getParameter(2));
-    	 			writer.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-*/
 
             List<Map<String, String>> nmeans = hstart.keySet().stream()
                     .map(key -> {
@@ -103,6 +88,9 @@ public class FTOFmonitoring extends MonitoringEngine {
                     .filter(nftof -> nftof.keySet().size() > 2)
                     .collect(Collectors.toList());
 
+		  hstart.values().stream().forEach(h1->{
+			Monitoring.upload(h1);
+		  });
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));
 
             submit("monftof", nmeans);
