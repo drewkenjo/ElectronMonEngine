@@ -38,6 +38,8 @@ public class DCmonitoring extends MonitoringEngine {
 
     @Override
     public boolean processDataEvent(DataEvent event) {
+		System.out.println("##################################################");
+		System.out.println(this.getEngineConfigString("torusMap"));
         if (event.hasBank("TimeBasedTrkg::TBHits") && event.hasBank("RUN::config")) {
             DataBank runbank = event.getBank("RUN::config");
             DataBank tbbank = event.getBank("TimeBasedTrkg::TBHits");
@@ -85,7 +87,6 @@ public class DCmonitoring extends MonitoringEngine {
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));
 
             submit("mondc", nmeans);
-
         }
 
         return true;

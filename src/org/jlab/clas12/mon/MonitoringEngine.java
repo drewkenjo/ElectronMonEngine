@@ -46,7 +46,7 @@ public abstract class MonitoringEngine extends ReconstructionEngine {
     }
     
     private void initialize(){
-        addJLabCert();
+        Monitoring.addJLabCert();
         try {
             getToken();
         } catch (FileNotFoundException ex) {
@@ -64,7 +64,8 @@ public abstract class MonitoringEngine extends ReconstructionEngine {
         }
     }
 
-    private void addJLabCert() {
+/*
+    public static void addJLabCert() {
         String coatdir = System.getenv("COATJAVA");
         if (coatdir != null) {
             String storename = coatdir + "/etc/data/keystore/jlab.keystore";
@@ -80,6 +81,7 @@ public abstract class MonitoringEngine extends ReconstructionEngine {
             System.err.println("[Mon12Resources] keystore with JLab SSL certificate can't be added!");
         }
     }
+*/
 
     public void submit(String dbname, List<Map<String, String>> entryList) {
 //        System.out.println(gson.toJson(entryList, List.class));

@@ -9,7 +9,7 @@ plugins {
     id 'idea'
 }
 group = 'org.jlab.clas12.mon'
-archivesBaseName = 'ElectronMonEngine'
+archivesBaseName = 'MonitoringServices'
 version = '1.0-SNAPSHOT'
 
 defaultTasks 'build'
