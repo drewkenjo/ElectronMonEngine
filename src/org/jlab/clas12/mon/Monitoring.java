@@ -42,7 +42,7 @@ public class Monitoring {
             }
         } else {
             System.err.println("[Mon12Resources] can't find COATJAVA environment variable");
-            System.err.println("[Mon12Resources] keystore with JLab SSL certificate can't be added!");
+            System.err.println("[Mon12Resources] keystore with JLab SSL certif icate can't be added!");
         }
     }
 
@@ -103,8 +103,8 @@ public class Monitoring {
           entryMap.put("ytitle",h1.getTitleY());
           entryMap.put("variation",variation);
           StringBuilder data = new StringBuilder("[");
-          for(int ibin=0;ibin<h1.getDataSize(0);ibin++){
-               data.append("["+h1.getXaxis().getBinCenter(ibin)+","+h1.getBinContent(ibin)+"],");
+          for(int ibin=0;ibin<h1.getDataSize(0);ibin++ ){
+               data.append("[" + h1.getXaxis().getBinCenter(ibin) + "," + h1.getBinContent(ibin) + "],");
           }
           data.setCharAt(data.length()-1,']');
           entryMap.put("data", data.toString());
@@ -126,7 +126,7 @@ public class Monitoring {
                     fwriter.close();
 
 //				System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(entryMap));
-                    System.out.println(h1.getName()+" "+variation);
+                    System.out.println(h1.getName() + " " + variation);
                     System.out.println(con.getResponseCode());
                     System.out.println(con.getResponseMessage());
                }

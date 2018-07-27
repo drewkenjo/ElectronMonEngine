@@ -45,10 +45,10 @@ public class NumberOfProtons extends MonitoringEngine {
 
             int nrows = pbank.rows();
             int[] sector = new int[nrows];
-            for (int isc = 0; isc < scbank.rows(); isc++) {
+            for (int isc = 0; isc < scbank.rows(); isc++ ) {
                 int idet = scbank.getByte("detector", isc);
-                if(idet == DetectorType.FTOF.getDetectorId()){
-                     int pindex = scbank.getShort("pindex", isc);
+                if (idet == DetectorType.FTOF.getDetectorId()){
+                   int pindex = scbank.getShort("pindex", isc);
      	           sector[pindex] = scbank.getByte("sector", isc);
                 }
             }
@@ -57,10 +57,10 @@ public class NumberOfProtons extends MonitoringEngine {
 
             ntriggers.computeIfAbsent(keys, k -> new AtomicInteger(0)).incrementAndGet();
 
-            for (int ipart = 0; ipart < nrows; ipart++) {
+            for (int ipart = 0; ipart < nrows; ipart++ ) {
                 int pid = pbank.getInt("pid", ipart);
                 if (pid == 2212 && sector[ipart] > 0) {
-                    nprotons.computeIfAbsent(keys+sector[ipart], k->new AtomicInteger(0)).incrementAndGet();
+                   nprotons.computeIfAbsent(keys + sector[ipart], k->new AtomicInteger(0)).incrementAndGet();
                 }
             }
         }
@@ -69,18 +69,18 @@ public class NumberOfProtons extends MonitoringEngine {
         if (nprocessed.getAndIncrement() % nintegration == 0) {
 
             ntriggers.keySet().stream()
-                    .forEach(key -> {
-                        if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
-                            String[] keys = key.split(",");
-                            int run = Integer.parseInt(keys[0]);
-                            float denom = ntriggers.get(key).get();
-                            for (int isec = 1; isec <= 6; isec++) {
-                                if (nprotons.containsKey(key+isec)) {
-                                    Monitoring.upload("npro" + isec, "default", run, nprotons.get(key+isec).get() / denom);
-                                }
-                            }
-                         }
-                    });
+                   .forEach(key -> {
+                      if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
+                           String[] keys = key.split(",");
+                           int run = Integer.parseInt(keys[0]);
+                           float denom = ntriggers.get(key).get();
+                           for (int isec = 1; isec <= 6; isec++ ) {
+                               if (nprotons.containsKey(key + isec)) {
+                                  Monitoring.upload("npro" + isec, "default", run, nprotons.get(key + isec).get() / denom);
+                               }
+                           }
+                       }
+                   });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));
         }

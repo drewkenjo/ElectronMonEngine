@@ -45,10 +45,10 @@ public class DCmonitoring extends MonitoringEngine {
             DataBank runbank = event.getBank("RUN::config");
             DataBank tbbank = event.getBank("TimeBasedTrkg::TBHits");
 
-            String key0 = runbank.getInt("run", 0)+",0,";
+            String key0 = runbank.getInt("run", 0) + ",0,";
 
             int nrows = tbbank.rows();
-            for (int ipart = 0; ipart < nrows; ipart++) {
+            for (int ipart = 0; ipart < nrows; ipart++ ) {
                 int sec = tbbank.getByte("sector", ipart);
                 int superlayer = tbbank.getByte("superlayer", ipart);
                 String keystr = key0 + sec + "," + superlayer;
@@ -65,19 +65,19 @@ public class DCmonitoring extends MonitoringEngine {
 
             nentries.keySet().stream()
                     .forEach(key -> {
-                        if (nentries.containsKey(key) && nentries.get(key).doubleValue() > 100) {
+                       if (nentries.containsKey(key) && nentries.get(key).doubleValue() > 100) {
  			             String[] keys = key.split(",");
-                            int run = Integer.parseInt(keys[0]);
-                            double denom = (double) nentries.get(key).doubleValue();
-                            String sector = keys[2];
-                            String superlayer = keys[3];
-                            if (residual.containsKey(key)) {
-                               Monitoring.upload("timeResidual" + sector+superlayer, "default", run, residual.get(key).doubleValue() / denom);
-                            }
-                            if (trkdoca.containsKey(key)) {
-                               Monitoring.upload("trkDoca" + sector+superlayer, "default", run, trkdoca.get(key).doubleValue() / denom);
-                            }
-                        }
+                           int run = Integer.parseInt(keys[0]);
+                           double denom = (double) nentries.get(key).doubleValue();
+                           String sector = keys[2];
+                           String superlayer = keys[3];
+                           if (residual.containsKey(key)) {
+                              Monitoring.upload("timeResidual" + sector + superlayer, "default", run, residual.get(key).doubleValue() / denom);
+                           }
+                           if (trkdoca.containsKey(key)) {
+                              Monitoring.upload("trkDoca" + sector + superlayer, "default", run, trkdoca.get(key).doubleValue() / denom);
+                           }
+                       }
                     });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));

@@ -45,24 +45,24 @@ public class NumberOfElectrons extends MonitoringEngine {
 
             int nrows = pbank.rows();
             int[] sector = new int[nrows];
-            for (int ical = 0; ical < calbank.rows(); ical++) {
+            for (int ical = 0; ical < calbank.rows(); ical++ ) {
                 int idet = calbank.getByte("detector", ical);
-                if(idet == DetectorType.ECAL.getDetectorId()){
+                if (idet == DetectorType.ECAL.getDetectorId()){
                 	int ilay = calbank.getByte("layer", ical);
                     if (ilay == 1 || ilay == 4 || ilay == 7) {
-                         int pindex = calbank.getShort("pindex", ical);
+                        int pindex = calbank.getShort("pindex", ical);
      		          sector[pindex] = calbank.getByte("sector", ical);
                     }
                 }
             }
 
-            String keystr = runbank.getInt("run", 0)+",0,";
+            String keystr = runbank.getInt("run", 0) + ",0,";
             ntriggers.computeIfAbsent(keystr, k -> new AtomicInteger(0)).incrementAndGet();
 
-            for (int ipart = 0; ipart < nrows; ipart++) {
+            for (int ipart = 0; ipart < nrows; ipart++ ) {
                 int pid = pbank.getInt("pid", ipart);
                 if (pid == 11 && sector[ipart] > 0) {
-                    nelectrons.computeIfAbsent(keystr+sector[ipart], k -> new AtomicInteger(0)).incrementAndGet();
+                    nelectrons.computeIfAbsent(keystr + sector[ipart], k -> new AtomicInteger(0)).incrementAndGet();
                 }
             }
         }
@@ -72,16 +72,16 @@ public class NumberOfElectrons extends MonitoringEngine {
 
             ntriggers.keySet().stream()
                     .forEach(key -> {
-                        if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
-                            String[] keys = key.split(",");
-                            int run = Integer.parseInt(keys[0]);
-                            float denom = ntriggers.get(key).get();
-                            for (int isec = 1; isec <= 6; isec++) {
-                                if (nelectrons.containsKey(key+isec)) {
-                                    Monitoring.upload("nele" + isec, "default", run, nelectrons.get(key+isec).get() / denom);
-                                }
-                            }
-                        }
+                       if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
+                           String[] keys = key.split(",");
+                           int run = Integer.parseInt(keys[0]);
+                           float denom = ntriggers.get(key).get();
+                           for (int isec = 1; isec <= 6; isec++ ) {
+                               if (nelectrons.containsKey(key + isec)) {
+                                   Monitoring.upload("nele" + isec, "default", run, nelectrons.get(key + isec).get() / denom);
+                               }
+                           }
+                       }
                     });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));

@@ -45,21 +45,21 @@ public class SamplingFraction extends MonitoringEngine {
             int nrows = pbank.rows();
             int[] sector = new int[nrows];
             float[] edep = new float[nrows];
-            for (int ical = 0; ical < calbank.rows(); ical++) {
+            for (int ical = 0; ical < calbank.rows(); ical++ ) {
                 int idet = calbank.getByte("detector", ical);
-                if(idet == DetectorType.ECAL.getDetectorId()){
+                if (idet == DetectorType.ECAL.getDetectorId()){
                 	 int ilay = calbank.getByte("layer", ical);
-                     if (ilay == 1 || ilay == 4 || ilay == 7) {
-                     	int pindex = calbank.getShort("pindex", ical);
+                    if (ilay == 1 || ilay == 4 || ilay == 7) {
+                    	int pindex = calbank.getShort("pindex", ical);
      	           	sector[pindex] = calbank.getByte("sector", ical);
-                         edep[pindex] += calbank.getFloat("energy", ical);
-                     }
+                        edep[pindex] += calbank.getFloat("energy", ical);
+                    }
                 }
             }
 
-            String keystr = runbank.getInt("run",0)+",0,";
+            String keystr = runbank.getInt("run",0) + ",0,";
 
-            for (int ipart = 0; ipart < nrows; ipart++) {
+            for (int ipart = 0; ipart < nrows; ipart++ ) {
                 int pid = pbank.getInt("pid", ipart);
                 if (pid == 11 && sector[ipart] > 0) {
                     float px = pbank.getFloat("px", ipart);
@@ -76,12 +76,12 @@ public class SamplingFraction extends MonitoringEngine {
 
             helesf.keySet().stream()
                     .forEach(key -> {
-                        Map<String, String> elesf = new HashMap<>();
-                        if (helesf.containsKey(key) && helesf.get(key).getEntries() > 100) {
-                            String[] keys = key.split(",");
-                            int run = Integer.parseInt(keys[0]);
-                            Monitoring.upload("elesf" + keys[2], "default", run, helesf.get(key).getMean());
-                        }
+                       Map<String, String> elesf = new HashMap<>();
+                       if (helesf.containsKey(key) && helesf.get(key).getEntries() > 100) {
+                           String[] keys = key.split(",");
+                           int run = Integer.parseInt(keys[0]);
+                           Monitoring.upload("elesf" + keys[2], "default", run, helesf.get(key).getMean());
+                       }
                     });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));

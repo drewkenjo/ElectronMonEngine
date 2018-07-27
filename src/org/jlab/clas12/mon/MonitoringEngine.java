@@ -78,7 +78,7 @@ public abstract class MonitoringEngine extends ReconstructionEngine {
             }
         } else {
             System.err.println("[Mon12Resources] can't find COATJAVA environment variable");
-            System.err.println("[Mon12Resources] keystore with JLab SSL certificate can't be added!");
+            System.err.println("[Mon12Resources] keystore with JLab SSL certif icate can't be added!");
         }
     }
 
@@ -87,7 +87,7 @@ public abstract class MonitoringEngine extends ReconstructionEngine {
 
         if (!entryList.isEmpty()) {
             try {
-                URL url = new URL("https://clas12mon.jlab.org/mondb/data/"+dbname);
+                URL url = new URL("https://clas12mon.jlab.org/mondb/data/" + dbname);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
                 con.setDoOutput(true);
                 con.setRequestMethod("PUT");

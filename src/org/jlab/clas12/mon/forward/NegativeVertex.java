@@ -44,23 +44,23 @@ public class NegativeVertex extends MonitoringEngine {
 
             int nrows = pbank.rows();
             int[] sector = new int[nrows];
-            for (int ical = 0; ical < calbank.rows(); ical++) {
+            for (int ical = 0; ical < calbank.rows(); ical++ ) {
                 int idet = calbank.getByte("detector", ical);
-                if(idet == DetectorType.ECAL.getDetectorId()){
-                     int ilay = calbank.getByte("layer", ical);
-                     if (ilay == 1 || ilay == 4 || ilay == 7) {
-                          int pindex = calbank.getShort("pindex", ical);
+                if (idet == DetectorType.ECAL.getDetectorId()){
+                    int ilay = calbank.getByte("layer", ical);
+                    if (ilay == 1 || ilay == 4 || ilay == 7) {
+                         int pindex = calbank.getShort("pindex", ical);
      		           sector[pindex] = calbank.getByte("sector", ical);
-                     }
+                    }
                 }
             }
-            for (int ipart = 0; ipart < nrows; ipart++) {
+            for (int ipart = 0; ipart < nrows; ipart++ ) {
                 int charge= pbank.getByte("charge", ipart);
                 if (charge<0 && sector[ipart] > 0) {
                     int sec = sector[ipart];
-          		String keys = runbank.getInt("run", 0)+",0,"+sec;
+          		String keys = runbank.getInt("run", 0) + ",0," + sec;
                     float vz = pbank.getFloat("vz", ipart);
-            		hvz.computeIfAbsent(keys, k -> new H1F("hvz"+sec, 350,-20,50)).fill(vz);
+            		hvz.computeIfAbsent(keys, k -> new H1F("hvz" + sec, 350,-20,50)).fill(vz);
                 }
             }
         }
@@ -70,11 +70,11 @@ public class NegativeVertex extends MonitoringEngine {
 
             hvz.keySet().stream()
                     .forEach(key -> {
-                        if (hvz.containsKey(key) && hvz.get(key).getEntries() > 100) {
-                            String[] keys = key.split(",");
-                            int run = Integer.parseInt(keys[0]);
-                            Monitoring.upload("negvz" + keys[2], "default", run, hvz.get(key).getMean());
-                        }
+                       if (hvz.containsKey(key) && hvz.get(key).getEntries() > 100) {
+                           String[] keys = key.split(",");
+                           int run = Integer.parseInt(keys[0]);
+                           Monitoring.upload("negvz" + keys[2], "default", run, hvz.get(key).getMean());
+                       }
                     });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));
