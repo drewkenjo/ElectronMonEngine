@@ -6,19 +6,10 @@
 package org.jlab.clas12.mon;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.clas.reco.ReconstructionEngine;
@@ -35,17 +26,17 @@ public abstract class MonitoringEngine extends ReconstructionEngine {
     /**
      * Constructor.
      */
-    public MonitoringEngine(){
-        super("test", "kenjo", "1.0");
+    public MonitoringEngine() {
+        super("monitoring", "kenjo", "1.0");
         initialize();
     }
 
-    public MonitoringEngine(String name, String author, String ver){
+    public MonitoringEngine(String name, String author, String ver) {
         super(name, author, ver);
         initialize();
     }
     
-    private void initialize(){
+    private void initialize() {
         Monitoring.addJLabCert();
         try {
             getToken();
@@ -82,7 +73,7 @@ public abstract class MonitoringEngine extends ReconstructionEngine {
         }
     }
 
-    public void submit(String dbname, List<Map<String, String>> entryList) {
+    public void submit(String dbname, List< Map<String, String > > entryList) {
 //        System.out.println(gson.toJson(entryList, List.class));
 
         if (!entryList.isEmpty()) {

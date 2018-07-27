@@ -5,13 +5,9 @@
  */
 package org.jlab.clas12.mon.forward;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataBank;
 import org.jlab.clas12.mon.MonitoringEngine;
@@ -44,21 +40,21 @@ public class PositiveVertex extends MonitoringEngine {
 
             int nrows = pbank.rows();
             int[] sector = new int[nrows];
-            for (int isc = 0; isc < scbank.rows(); isc++ ) {
+            for (int isc = 0; isc < scbank.rows(); isc++) {
                 int idet = scbank.getByte("detector", isc);
-                if (idet == DetectorType.FTOF.getDetectorId()){
+                if (idet == DetectorType.FTOF.getDetectorId()) {
                     int pindex = scbank.getShort("pindex", isc);
-     	           sector[pindex] = scbank.getByte("sector", isc);
+                    sector[pindex] = scbank.getByte("sector", isc);
                 }
             }
-            for (int ipart = 0; ipart < nrows; ipart++ ) {
+            for (int ipart = 0; ipart < nrows; ipart++) {
                 int charge= pbank.getByte("charge", ipart);
-                if (charge>0 && sector[ipart] > 0) {
+                if (charge > 0 && sector[ipart] > 0) {
                     int sec = sector[ipart];
-          		String keys = runbank.getInt("run", 0) + ",0," + sec;
+                    String keys = runbank.getInt("run", 0) + ", 0, " + sec;
 
                     float vz = pbank.getFloat("vz", ipart);
-            		hvz.computeIfAbsent(keys, k -> new H1F("hvz" + sec, 350,-20,50)).fill(vz);
+                    hvz.computeIfAbsent(keys, k -> new H1F("hvz" + sec, 350, -20, 50)).fill(vz);
                 }
             }
         }
@@ -69,13 +65,13 @@ public class PositiveVertex extends MonitoringEngine {
             hvz.keySet().stream()
                     .forEach(key -> {
                         if (hvz.containsKey(key) && hvz.get(key).getEntries() > 100) {
-                            String[] keys = key.split(",");
+                            String[] keys = key.split(", ");
                             int run = Integer.parseInt(keys[0]);
                             Monitoring.upload("posvz" + keys[2], "default", run, hvz.get(key).getMean());
                         }
                     });
 
-//            nrates.stream().forEach(x->x.values().forEach(System.out::println));
+//            nrates.stream().forEach(x -> x.values().forEach(System.out::println));
         }
         return true;
     }

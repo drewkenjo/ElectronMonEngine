@@ -5,13 +5,9 @@
  */
 package org.jlab.clas12.mon.pid;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataBank;
 import org.jlab.clas12.mon.MonitoringEngine;
@@ -45,22 +41,22 @@ public class NumberOfProtons extends MonitoringEngine {
 
             int nrows = pbank.rows();
             int[] sector = new int[nrows];
-            for (int isc = 0; isc < scbank.rows(); isc++ ) {
+            for (int isc = 0; isc < scbank.rows(); isc++) {
                 int idet = scbank.getByte("detector", isc);
-                if (idet == DetectorType.FTOF.getDetectorId()){
+                if (idet == DetectorType.FTOF.getDetectorId()) {
                     int pindex = scbank.getShort("pindex", isc);
-     	           sector[pindex] = scbank.getByte("sector", isc);
+                    sector[pindex] = scbank.getByte("sector", isc);
                 }
             }
 
-            String keys = runbank.getInt("run", 0) + ",0,";
+            String keys = runbank.getInt("run", 0) + ", 0, ";
 
             ntriggers.computeIfAbsent(keys, k -> new AtomicInteger(0)).incrementAndGet();
 
-            for (int ipart = 0; ipart < nrows; ipart++ ) {
+            for (int ipart = 0; ipart < nrows; ipart++) {
                 int pid = pbank.getInt("pid", ipart);
                 if (pid == 2212 && sector[ipart] > 0) {
-                    nprotons.computeIfAbsent(keys + sector[ipart], k->new AtomicInteger(0)).incrementAndGet();
+                    nprotons.computeIfAbsent(keys + sector[ipart], k -> new AtomicInteger(0)).incrementAndGet();
                 }
             }
         }
@@ -70,19 +66,19 @@ public class NumberOfProtons extends MonitoringEngine {
 
             ntriggers.keySet().stream()
                     .forEach(key -> {
-                       if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
-                           String[] keys = key.split(",");
-                           int run = Integer.parseInt(keys[0]);
-                           float denom = ntriggers.get(key).get();
-                           for (int isec = 1; isec <= 6; isec++ ) {
-                               if (nprotons.containsKey(key + isec)) {
-                                   Monitoring.upload("npro" + isec, "default", run, nprotons.get(key + isec).get() / denom);
-                               }
-                           }
-                       }
-                   });
+                        if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
+                            String[] keys = key.split(", ");
+                            int run = Integer.parseInt(keys[0]);
+                            float denom = ntriggers.get(key).get();
+                            for (int isec = 1; isec <= 6; isec++) {
+                                if (nprotons.containsKey(key + isec)) {
+                                    Monitoring.upload("npro" + isec, "default", run, nprotons.get(key + isec).get() / denom);
+                                }
+                            }
+                        }
+                    });
 
-//            nrates.stream().forEach(x->x.values().forEach(System.out::println));
+//            nrates.stream().forEach(x -> x.values().forEach(System.out::println));
         }
         return true;
     }
