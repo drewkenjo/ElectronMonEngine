@@ -72,16 +72,16 @@ public class NumberOfElectrons extends MonitoringEngine {
 
             ntriggers.keySet().stream()
                     .forEach(key -> {
-                       if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
-                           String[] keys = key.split(",");
-                           int run = Integer.parseInt(keys[0]);
-                           float denom = ntriggers.get(key).get();
-                           for (int isec = 1; isec <= 6; isec++ ) {
-                               if (nelectrons.containsKey(key + isec)) {
-                                   Monitoring.upload("nele" + isec, "default", run, nelectrons.get(key + isec).get() / denom);
-                               }
-                           }
-                       }
+                        if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
+                            String[] keys = key.split(",");
+                            int run = Integer.parseInt(keys[0]);
+                            float denom = ntriggers.get(key).get();
+                            for (int isec = 1; isec <= 6; isec++ ) {
+                                if (nelectrons.containsKey(key + isec)) {
+                                    Monitoring.upload("nele" + isec, "default", run, nelectrons.get(key + isec).get() / denom);
+                                }
+                            }
+                        }
                     });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));

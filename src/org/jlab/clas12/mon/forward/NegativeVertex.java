@@ -49,7 +49,7 @@ public class NegativeVertex extends MonitoringEngine {
                 if (idet == DetectorType.ECAL.getDetectorId()){
                     int ilay = calbank.getByte("layer", ical);
                     if (ilay == 1 || ilay == 4 || ilay == 7) {
-                         int pindex = calbank.getShort("pindex", ical);
+                        int pindex = calbank.getShort("pindex", ical);
      		           sector[pindex] = calbank.getByte("sector", ical);
                     }
                 }
@@ -70,11 +70,11 @@ public class NegativeVertex extends MonitoringEngine {
 
             hvz.keySet().stream()
                     .forEach(key -> {
-                       if (hvz.containsKey(key) && hvz.get(key).getEntries() > 100) {
-                           String[] keys = key.split(",");
-                           int run = Integer.parseInt(keys[0]);
-                           Monitoring.upload("negvz" + keys[2], "default", run, hvz.get(key).getMean());
-                       }
+                        if (hvz.containsKey(key) && hvz.get(key).getEntries() > 100) {
+                            String[] keys = key.split(",");
+                            int run = Integer.parseInt(keys[0]);
+                            Monitoring.upload("negvz" + keys[2], "default", run, hvz.get(key).getMean());
+                        }
                     });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));

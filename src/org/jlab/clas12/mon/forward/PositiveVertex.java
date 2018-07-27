@@ -68,11 +68,11 @@ public class PositiveVertex extends MonitoringEngine {
 
             hvz.keySet().stream()
                     .forEach(key -> {
-                       if (hvz.containsKey(key) && hvz.get(key).getEntries() > 100) {
-                           String[] keys = key.split(",");
-                           int run = Integer.parseInt(keys[0]);
-                           Monitoring.upload("posvz" + keys[2], "default", run, hvz.get(key).getMean());
-                       }
+                        if (hvz.containsKey(key) && hvz.get(key).getEntries() > 100) {
+                            String[] keys = key.split(",");
+                            int run = Integer.parseInt(keys[0]);
+                            Monitoring.upload("posvz" + keys[2], "default", run, hvz.get(key).getMean());
+                        }
                     });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));

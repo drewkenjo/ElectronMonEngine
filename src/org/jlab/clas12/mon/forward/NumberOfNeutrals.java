@@ -49,7 +49,7 @@ public class NumberOfNeutrals extends MonitoringEngine {
                 if (idet == DetectorType.ECAL.getDetectorId()){
                     int ilay = calbank.getByte("layer", ical);
                     if (ilay == 1 || ilay == 4 || ilay == 7) {
-                         int pindex = calbank.getShort("pindex", ical);
+                        int pindex = calbank.getShort("pindex", ical);
      		           sector[pindex] = calbank.getByte("sector", ical);
                     }
                 }
@@ -71,16 +71,16 @@ public class NumberOfNeutrals extends MonitoringEngine {
 
             ntriggers.keySet().stream()
                     .forEach(key -> {
-                       if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
-                           String[] keys = key.split(",");
-                           int run = Integer.parseInt(keys[0]);
-                           float denom = ntriggers.get(key).get();
-                           for (int isec = 1; isec <= 6; isec++ ) {
-                               if (nneutrals.containsKey(key + isec)) {
-                                   Monitoring.upload("nneut" + isec, "default", run, nneutrals.get(key + isec).get() / denom);
-                               }
-                           }
-                       }
+                        if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
+                            String[] keys = key.split(",");
+                            int run = Integer.parseInt(keys[0]);
+                            float denom = ntriggers.get(key).get();
+                            for (int isec = 1; isec <= 6; isec++ ) {
+                                if (nneutrals.containsKey(key + isec)) {
+                                    Monitoring.upload("nneut" + isec, "default", run, nneutrals.get(key + isec).get() / denom);
+                                }
+                            }
+                        }
                     });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));

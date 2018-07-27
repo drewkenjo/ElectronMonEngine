@@ -46,92 +46,92 @@ public class Monitoring {
         }
     }
 
-     static class RunSeriesElement {
-          private final String name;
-          private final String variation;
-          private final int run;
-          private final double value;
-          RunSeriesElement(String name, String variation, int run, double value) {
-               this.name = name;
-               this.variation = variation;
-               this.run = run;
-               this.value = value;
-          }
-     }
+    static class RunSeriesElement {
+        private final String name;
+        private final String variation;
+        private final int run;
+        private final double value;
+        RunSeriesElement(String name, String variation, int run, double value) {
+            this.name = name;
+            this.variation = variation;
+            this.run = run;
+            this.value = value;
+        }
+    }
 
-     public static void upload(String name, String variation, int run, double value){
-          Gson gson = new Gson();
-          RunSeriesElement entry = new RunSeriesElement(name, variation, run, value);
+    public static void upload(String name, String variation, int run, double value){
+        Gson gson = new Gson();
+        RunSeriesElement entry = new RunSeriesElement(name, variation, run, value);
 
-          try {
-               String homedir = System.getenv("HOME");
-               BufferedReader bufferedReader = new BufferedReader(new FileReader(homedir + "/.clas12mon.token"));
-               Map<String, String> tokenMap = gson.fromJson(bufferedReader, Map.class);
-               if (tokenMap.containsKey("key")) {
-                    String token = tokenMap.get("key");
+        try {
+            String homedir = System.getenv("HOME");
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(homedir + "/.clas12mon.token"));
+            Map<String, String> tokenMap = gson.fromJson(bufferedReader, Map.class);
+            if (tokenMap.containsKey("key")) {
+                String token = tokenMap.get("key");
 
-                    URL url = new URL("https://clas12mon.jlab.org/mondb/runseries/");
-                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                    con.setDoOutput(true);
-                    con.setRequestMethod("PUT");
-                    con.setRequestProperty("token", token);
-                    Writer fwriter = new OutputStreamWriter(con.getOutputStream());
-                    gson.toJson(entry, fwriter);
-                    fwriter.flush();
-                    fwriter.close();
+                URL url = new URL("https://clas12mon.jlab.org/mondb/runseries/");
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setDoOutput(true);
+                con.setRequestMethod("PUT");
+                con.setRequestProperty("token", token);
+                Writer fwriter = new OutputStreamWriter(con.getOutputStream());
+                gson.toJson(entry, fwriter);
+                fwriter.flush();
+                fwriter.close();
 
-                    System.out.println(gson.toJson(entry));
-                    System.out.println(con.getResponseCode());
-                    System.out.println(con.getResponseMessage());
-               }
-          } catch (IOException ex) {
-               Logger.getLogger(Monitoring.class.getName()).log(Level.SEVERE, null, ex);
-          }
-     }
+                System.out.println(gson.toJson(entry));
+                System.out.println(con.getResponseCode());
+                System.out.println(con.getResponseMessage());
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Monitoring.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
-     public static void upload(H1F h1) {
-          upload(h1, "default");
-     }
+    public static void upload(H1F h1) {
+        upload(h1, "default");
+    }
 
 
-     public static void upload(H1F h1,String variation) {
-          Gson gson = new Gson();
-          Map<String, String> entryMap = new HashMap<>();
-          entryMap.put("name",h1.getName());
-          entryMap.put("title",h1.getTitle());
-          entryMap.put("xtitle",h1.getTitleX());
-          entryMap.put("ytitle",h1.getTitleY());
-          entryMap.put("variation",variation);
-          StringBuilder data = new StringBuilder("[");
-          for(int ibin=0;ibin<h1.getDataSize(0);ibin++ ){
-               data.append("[" + h1.getXaxis().getBinCenter(ibin) + "," + h1.getBinContent(ibin) + "],");
-          }
-          data.setCharAt(data.length()-1,']');
-          entryMap.put("data", data.toString());
-          try {
-               String homedir = System.getenv("HOME");
-               BufferedReader bufferedReader = new BufferedReader(new FileReader(homedir + "/.clas12mon.token"));
-               Map<String, String> tokenMap = gson.fromJson(bufferedReader, Map.class);
-               if (tokenMap.containsKey("key")) {
-                    String token = tokenMap.get("key");
+    public static void upload(H1F h1,String variation) {
+        Gson gson = new Gson();
+        Map<String, String> entryMap = new HashMap<>();
+        entryMap.put("name",h1.getName());
+        entryMap.put("title",h1.getTitle());
+        entryMap.put("xtitle",h1.getTitleX());
+        entryMap.put("ytitle",h1.getTitleY());
+        entryMap.put("variation",variation);
+        StringBuilder data = new StringBuilder("[");
+        for(int ibin=0;ibin<h1.getDataSize(0);ibin++ ){
+            data.append("[" + h1.getXaxis().getBinCenter(ibin) + "," + h1.getBinContent(ibin) + "],");
+        }
+        data.setCharAt(data.length()-1,']');
+        entryMap.put("data", data.toString());
+        try {
+            String homedir = System.getenv("HOME");
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(homedir + "/.clas12mon.token"));
+            Map<String, String> tokenMap = gson.fromJson(bufferedReader, Map.class);
+            if (tokenMap.containsKey("key")) {
+                String token = tokenMap.get("key");
 
-                    URL url = new URL("https://clas12mon.jlab.org/mondb/h1d/");
-                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                    con.setDoOutput(true);
-                    con.setRequestMethod("PUT");
-                    con.setRequestProperty("token", token);
-                    Writer fwriter = new OutputStreamWriter(con.getOutputStream());
-                    gson.toJson(entryMap, fwriter);
-                    fwriter.flush();
-                    fwriter.close();
+                URL url = new URL("https://clas12mon.jlab.org/mondb/h1d/");
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setDoOutput(true);
+                con.setRequestMethod("PUT");
+                con.setRequestProperty("token", token);
+                Writer fwriter = new OutputStreamWriter(con.getOutputStream());
+                gson.toJson(entryMap, fwriter);
+                fwriter.flush();
+                fwriter.close();
 
 //				System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(entryMap));
-                    System.out.println(h1.getName() + " " + variation);
-                    System.out.println(con.getResponseCode());
-                    System.out.println(con.getResponseMessage());
-               }
-          } catch (IOException ex) {
-               Logger.getLogger(Monitoring.class.getName()).log(Level.SEVERE, null, ex);
-          }
-     }
+                System.out.println(h1.getName() + " " + variation);
+                System.out.println(con.getResponseCode());
+                System.out.println(con.getResponseMessage());
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Monitoring.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }

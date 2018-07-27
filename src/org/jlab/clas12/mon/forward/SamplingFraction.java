@@ -76,12 +76,12 @@ public class SamplingFraction extends MonitoringEngine {
 
             helesf.keySet().stream()
                     .forEach(key -> {
-                       Map<String, String> elesf = new HashMap<>();
-                       if (helesf.containsKey(key) && helesf.get(key).getEntries() > 100) {
-                           String[] keys = key.split(",");
-                           int run = Integer.parseInt(keys[0]);
-                           Monitoring.upload("elesf" + keys[2], "default", run, helesf.get(key).getMean());
-                       }
+                        Map<String, String> elesf = new HashMap<>();
+                        if (helesf.containsKey(key) && helesf.get(key).getEntries() > 100) {
+                            String[] keys = key.split(",");
+                            int run = Integer.parseInt(keys[0]);
+                            Monitoring.upload("elesf" + keys[2], "default", run, helesf.get(key).getMean());
+                        }
                     });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));

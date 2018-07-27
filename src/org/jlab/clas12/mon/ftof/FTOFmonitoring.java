@@ -52,8 +52,8 @@ public class FTOFmonitoring extends MonitoringEngine {
             //keys.add((runbank.getInt("unixtime", 0) / 60) * 60);
 
             for(int isc=0;isc<scbank.rows();isc++ ){
-               int idet = scbank.getByte("detector", isc);
-               if (scbank.getShort("pindex", isc)==0 && idet==DetectorType.FTOF.getDetectorId()){
+                int idet = scbank.getByte("detector", isc);
+                if (scbank.getShort("pindex", isc)==0 && idet==DetectorType.FTOF.getDetectorId()){
                     int sec = scbank.getByte("sector", isc);
                     float sttime = evbank.getFloat("STTime",0);
                     if (sec>0 && sttime>0){
@@ -66,7 +66,7 @@ public class FTOFmonitoring extends MonitoringEngine {
                         hstart.computeIfAbsent(keys + sec, k -> new H1F("hftofmon" + run + "s" + sec,1000,-2,2)).fill((sttime - rftime + 1.002)%2.004-1.002);
                     }
                     break;
-               }
+                }
             }
         }
 
@@ -75,21 +75,21 @@ public class FTOFmonitoring extends MonitoringEngine {
 
             hstart.keySet().stream()
                     .forEach(key -> {
-                       if (hstart.containsKey(key) && hstart.get(key).getEntries() > 100) {
-                           String[] keys = key.split(",");
-                           int run = Integer.parseInt(keys[0]);
-                           Monitoring.upload("sttime_m" + keys[2], "default", run, hstart.get(key).getMean());
-                           Monitoring.upload("sttime_s" + keys[2], "default", run, hstart.get(key).getRMS());
-                       }
+                        if (hstart.containsKey(key) && hstart.get(key).getEntries() > 100) {
+                            String[] keys = key.split(",");
+                            int run = Integer.parseInt(keys[0]);
+                            Monitoring.upload("sttime_m" + keys[2], "default", run, hstart.get(key).getMean());
+                            Monitoring.upload("sttime_s" + keys[2], "default", run, hstart.get(key).getRMS());
+                        }
                     });
 
             hstart.values().stream().forEach(h1->{
-               Monitoring.upload(h1);
+                Monitoring.upload(h1);
             });
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));
         }
 
-       return true;
+        return true;
     }
 
 }

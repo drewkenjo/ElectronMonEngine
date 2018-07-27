@@ -71,16 +71,16 @@ public class NumberOfNegatives extends MonitoringEngine {
 
             ntriggers.keySet().stream()
                     .forEach(key -> {
-                       if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
-                           String[] keys = key.split(",");
-                           int run = Integer.parseInt(keys[0]);
-                           float denom = ntriggers.get(key).get();
-                           for (int isec = 1; isec <= 6; isec++ ) {
-                               if (nnegatives.containsKey(key + isec)) {
-                                   Monitoring.upload("nneg" + isec, "default", run, nnegatives.get(key + isec).get() / denom);
-                               }
-                           }
-                       }
+                        if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
+                            String[] keys = key.split(",");
+                            int run = Integer.parseInt(keys[0]);
+                            float denom = ntriggers.get(key).get();
+                            for (int isec = 1; isec <= 6; isec++ ) {
+                                if (nnegatives.containsKey(key + isec)) {
+                                    Monitoring.upload("nneg" + isec, "default", run, nnegatives.get(key + isec).get() / denom);
+                                }
+                            }
+                        }
                     });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));
