@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataBank;
 import org.jlab.clas12.mon.MonitoringEngine;
+import org.jlab.clas12.mon.Monitoring;
 import org.jlab.detector.base.DetectorType;
 
 
@@ -45,11 +46,11 @@ public class NumberOfProtons extends MonitoringEngine {
             int nrows = pbank.rows();
             int[] sector = new int[nrows];
             for (int isc = 0; isc < scbank.rows(); isc++) {
-			 int idet = scbank.getByte("detector", isc);
-			 if(idet == DetectorType.FTOF.getDetectorId()){
-	                int pindex = scbank.getShort("pindex", isc);
+                int idet = scbank.getByte("detector", isc);
+                if(idet == DetectorType.FTOF.getDetectorId()){
+                     int pindex = scbank.getShort("pindex", isc);
      	           sector[pindex] = scbank.getByte("sector", isc);
-			 }
+                }
             }
 
             String keys = runbank.getInt("run", 0) + ",0,";
@@ -67,28 +68,21 @@ public class NumberOfProtons extends MonitoringEngine {
         //we lose the last chunk of events. Need to ask Vardan how to check if it's the last event (problematic in parallel mode)
         if (nprocessed.getAndIncrement() % nintegration == 0) {
 
-            List<Map<String, String>> nrates = ntriggers.keySet().stream()
-                    .map(key -> {
-                        Map<String, String> npro = new HashMap<>();
+            ntriggers.keySet().stream()
+                    .forEach(key -> {
                         if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
-					   String[] keys = key.split(",");
-                            npro.put("run", keys[0]);
-                            npro.put("time", keys[1]);
+                            String[] keys = key.split(",");
+                            int run = Integer.parseInt(keys[0]);
                             float denom = ntriggers.get(key).get();
                             for (int isec = 1; isec <= 6; isec++) {
                                 if (nprotons.containsKey(key+isec)) {
-                                    npro.put("npro" + isec, Float.toString(nprotons.get(key+isec).get() / denom));
+                                    Monitoring.upload("npro" + isec, "default", run, nprotons.get(key+isec).get() / denom);
                                 }
                             }
-                        }
-                        return npro;
-                    })
-                    .filter(npro -> npro.keySet().size() > 2)
-                    .collect(Collectors.toList());
+                         }
+                    });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));
-
-            submit("monpro", nrates);
         }
         return true;
     }

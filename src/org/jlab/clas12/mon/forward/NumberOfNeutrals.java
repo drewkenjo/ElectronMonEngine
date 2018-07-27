@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataBank;
 import org.jlab.clas12.mon.MonitoringEngine;
+import org.jlab.clas12.mon.Monitoring;
 import org.jlab.detector.base.DetectorType;
 
 /**
@@ -44,14 +45,14 @@ public class NumberOfNeutrals extends MonitoringEngine {
             int nrows = pbank.rows();
             int[] sector = new int[nrows];
             for (int ical = 0; ical < calbank.rows(); ical++) {
-			 int idet = calbank.getByte("detector", ical);
-			 if(idet == DetectorType.ECAL.getDetectorId()){
+                int idet = calbank.getByte("detector", ical);
+                if(idet == DetectorType.ECAL.getDetectorId()){
                      int ilay = calbank.getByte("layer", ical);
                      if (ilay == 1 || ilay == 4 || ilay == 7) {
-		                int pindex = calbank.getShort("pindex", ical);
+                          int pindex = calbank.getShort("pindex", ical);
      		           sector[pindex] = calbank.getByte("sector", ical);
-				 }
-			 }
+                     }
+                }
             }
 
             String keys = runbank.getInt("run", 0) + ",0,";
@@ -68,28 +69,21 @@ public class NumberOfNeutrals extends MonitoringEngine {
         //we lose the last chunk of events. Need to ask Vardan how to check if it's the last event (problematic in parallel mode)
         if (nprocessed.getAndIncrement() % nintegration == 0) {
 
-            List<Map<String, String>> nrates = ntriggers.keySet().stream()
-                    .map(key -> {
-                        Map<String, String> nneut = new HashMap<>();
+            ntriggers.keySet().stream()
+                    .forEach(key -> {
                         if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
-					   String[] keys = key.split(",");
-                            nneut.put("run", keys[0]);
-                            nneut.put("time", keys[1]);
+                            String[] keys = key.split(",");
+                            int run = Integer.parseInt(keys[0]);
                             float denom = ntriggers.get(key).get();
                             for (int isec = 1; isec <= 6; isec++) {
                                 if (nneutrals.containsKey(key+isec)) {
-                                    nneut.put("nneut" + isec, Float.toString(nneutrals.get(key+isec).get() / denom));
+                                    Monitoring.upload("nneut" + isec, "default", run, nneutrals.get(key+isec).get() / denom);
                                 }
                             }
                         }
-                        return nneut;
-                    })
-                    .filter(nneut -> nneut.keySet().size() > 2)
-                    .collect(Collectors.toList());
+                    });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));
-
-            submit("monneut", nrates);
         }
         return true;
     }

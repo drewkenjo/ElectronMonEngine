@@ -81,7 +81,6 @@ public abstract class MonitoringEngine extends ReconstructionEngine {
             System.err.println("[Mon12Resources] keystore with JLab SSL certificate can't be added!");
         }
     }
-*/
 
     public void submit(String dbname, List<Map<String, String>> entryList) {
 //        System.out.println(gson.toJson(entryList, List.class));
@@ -98,7 +97,7 @@ public abstract class MonitoringEngine extends ReconstructionEngine {
                 fwriter.flush();
                 fwriter.close();
 
-		System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(entryList));
+          System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(entryList));
                 System.out.println(con.getResponseCode());
                 System.out.println(con.getResponseMessage());
             } catch (IOException ex) {
@@ -106,6 +105,7 @@ public abstract class MonitoringEngine extends ReconstructionEngine {
             }
         }
     }
+*/
 
     @Override
     public boolean init() {

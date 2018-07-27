@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataBank;
 import org.jlab.clas12.mon.MonitoringEngine;
+import org.jlab.clas12.mon.Monitoring;
 import org.jlab.detector.base.DetectorType;
 
 
@@ -45,14 +46,14 @@ public class NumberOfElectrons extends MonitoringEngine {
             int nrows = pbank.rows();
             int[] sector = new int[nrows];
             for (int ical = 0; ical < calbank.rows(); ical++) {
-			 int idet = calbank.getByte("detector", ical);
-			 if(idet == DetectorType.ECAL.getDetectorId()){
-			 	int ilay = calbank.getByte("layer", ical);
-			     if (ilay == 1 || ilay == 4 || ilay == 7) {
-		               int pindex = calbank.getShort("pindex", ical);
+                int idet = calbank.getByte("detector", ical);
+                if(idet == DetectorType.ECAL.getDetectorId()){
+                	int ilay = calbank.getByte("layer", ical);
+                    if (ilay == 1 || ilay == 4 || ilay == 7) {
+                         int pindex = calbank.getShort("pindex", ical);
      		          sector[pindex] = calbank.getByte("sector", ical);
-				}
-			 }
+                    }
+                }
             }
 
             String keystr = runbank.getInt("run", 0)+",0,";
@@ -61,7 +62,7 @@ public class NumberOfElectrons extends MonitoringEngine {
             for (int ipart = 0; ipart < nrows; ipart++) {
                 int pid = pbank.getInt("pid", ipart);
                 if (pid == 11 && sector[ipart] > 0) {
-				nelectrons.computeIfAbsent(keystr+sector[ipart], k -> new AtomicInteger(0)).incrementAndGet();
+                    nelectrons.computeIfAbsent(keystr+sector[ipart], k -> new AtomicInteger(0)).incrementAndGet();
                 }
             }
         }
@@ -69,28 +70,21 @@ public class NumberOfElectrons extends MonitoringEngine {
         //we lose the last chunk of events. Need to ask Vardan how to check if it's the last event (problematic in parallel mode)
         if (nprocessed.getAndIncrement() % nintegration == 0) {
 
-            List<Map<String, String>> nrates = ntriggers.keySet().stream()
-                    .map(key -> {
-                        Map<String, String> nele = new HashMap<>();
+            ntriggers.keySet().stream()
+                    .forEach(key -> {
                         if (ntriggers.containsKey(key) && ntriggers.get(key).get() > 100) {
-					   String[] keys = key.split(",");
-                            nele.put("run", keys[0]);
-                            nele.put("time", keys[1]);
+                            String[] keys = key.split(",");
+                            int run = Integer.parseInt(keys[0]);
                             float denom = ntriggers.get(key).get();
                             for (int isec = 1; isec <= 6; isec++) {
                                 if (nelectrons.containsKey(key+isec)) {
-                                    nele.put("nele" + isec, Float.toString(nelectrons.get(key+isec).get() / denom));
+                                    Monitoring.upload("nele" + isec, "default", run, nelectrons.get(key+isec).get() / denom);
                                 }
                             }
                         }
-                        return nele;
-                    })
-                    .filter(nele -> nele.keySet().size() > 2)
-                    .collect(Collectors.toList());
+                    });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));
-
-            submit("monele", nrates);
         }
         return true;
     }

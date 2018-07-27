@@ -17,6 +17,7 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataBank;
 import java.util.Collections;
 import org.jlab.clas12.mon.MonitoringEngine;
+import org.jlab.clas12.mon.Monitoring;
 
 /**
  *
@@ -38,23 +39,23 @@ public class DCmonitoring extends MonitoringEngine {
 
     @Override
     public boolean processDataEvent(DataEvent event) {
-		System.out.println("##################################################");
-		System.out.println(this.getEngineConfigString("torusMap"));
+          System.out.println("##################################################");
+          System.out.println(this.getEngineConfigString("torusMap"));
         if (event.hasBank("TimeBasedTrkg::TBHits") && event.hasBank("RUN::config")) {
             DataBank runbank = event.getBank("RUN::config");
             DataBank tbbank = event.getBank("TimeBasedTrkg::TBHits");
 
             String key0 = runbank.getInt("run", 0)+",0,";
 
-		  int nrows = tbbank.rows();
+            int nrows = tbbank.rows();
             for (int ipart = 0; ipart < nrows; ipart++) {
                 int sec = tbbank.getByte("sector", ipart);
                 int superlayer = tbbank.getByte("superlayer", ipart);
-			 String keystr = key0 + sec + "," + superlayer;
+                String keystr = key0 + sec + "," + superlayer;
 
-			 nentries.computeIfAbsent(keystr, k -> new DoubleAdder()).add(1);
-			 residual.computeIfAbsent(keystr, k -> new DoubleAdder()).add(tbbank.getFloat("timeResidual", ipart));
-			 trkdoca.computeIfAbsent(keystr, k -> new DoubleAdder()).add(tbbank.getFloat("trkDoca", ipart));
+                nentries.computeIfAbsent(keystr, k -> new DoubleAdder()).add(1);
+                residual.computeIfAbsent(keystr, k -> new DoubleAdder()).add(tbbank.getFloat("timeResidual", ipart));
+                trkdoca.computeIfAbsent(keystr, k -> new DoubleAdder()).add(tbbank.getFloat("trkDoca", ipart));
             }
         }
 
@@ -62,31 +63,24 @@ public class DCmonitoring extends MonitoringEngine {
 
         if (nprocessed.incrementAndGet() % nintegration == 0) {
 
-            List<Map<String, String>> nmeans = nentries.keySet().stream()
-                    .map(key -> {
-                        Map<String, String> ndc = new HashMap<>();
+            nentries.keySet().stream()
+                    .forEach(key -> {
                         if (nentries.containsKey(key) && nentries.get(key).doubleValue() > 100) {
  			             String[] keys = key.split(",");
-                            ndc.put("run", keys[0]);
-                            ndc.put("time", keys[1]);
+                            int run = Integer.parseInt(keys[0]);
                             double denom = (double) nentries.get(key).doubleValue();
                             String sector = keys[2];
                             String superlayer = keys[3];
                             if (residual.containsKey(key)) {
-                               ndc.put("timeResidual" + sector+superlayer, Double.toString(residual.get(key).doubleValue() / denom));
-					   }
+                               Monitoring.upload("timeResidual" + sector+superlayer, "default", run, residual.get(key).doubleValue() / denom);
+                            }
                             if (trkdoca.containsKey(key)) {
-                               ndc.put("trkDoca" + sector+superlayer, Double.toString(trkdoca.get(key).doubleValue() / denom));
+                               Monitoring.upload("trkDoca" + sector+superlayer, "default", run, trkdoca.get(key).doubleValue() / denom);
                             }
                         }
-                        return ndc;
-                    })
-                    .filter(ndc -> ndc.keySet().size() > 2)
-                    .collect(Collectors.toList());
+                    });
 
 //            nrates.stream().forEach(x->x.values().forEach(System.out::println));
-
-            submit("mondc", nmeans);
         }
 
         return true;
