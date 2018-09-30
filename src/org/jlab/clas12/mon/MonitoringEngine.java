@@ -3,6 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 package org.jlab.clas12.mon;
 
 import com.google.gson.Gson;
@@ -35,9 +36,8 @@ public abstract class MonitoringEngine extends ReconstructionEngine {
         super(name, author, ver);
         initialize();
     }
-    
+
     private void initialize() {
-        Monitoring.addJLabCert();
         try {
             getToken();
         } catch (FileNotFoundException ex) {
@@ -54,49 +54,6 @@ public abstract class MonitoringEngine extends ReconstructionEngine {
             token = tokenMap.get("key");
         }
     }
-
-/*
-    public static void addJLabCert() {
-        String coatdir = System.getenv("COATJAVA");
-        if (coatdir != null) {
-            String storename = coatdir + "/etc/data/keystore/jlab.keystore";
-            File ff = new File(storename);
-
-            if (ff.isFile()) {
-                Properties p = new Properties(System.getProperties());
-                p.setProperty("javax.net.ssl.trustStore", storename);
-                System.setProperties(p);
-            }
-        } else {
-            System.err.println("[Mon12Resources] can't find COATJAVA environment variable");
-            System.err.println("[Mon12Resources] keystore with JLab SSL certif icate can't be added!");
-        }
-    }
-
-    public void submit(String dbname, List< Map<String, String > > entryList) {
-//        System.out.println(gson.toJson(entryList, List.class));
-
-        if (!entryList.isEmpty()) {
-            try {
-                URL url = new URL("https://clas12mon.jlab.org/mondb/data/" + dbname);
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setDoOutput(true);
-                con.setRequestMethod("PUT");
-                con.setRequestProperty("token", token);
-                Writer fwriter = new OutputStreamWriter(con.getOutputStream());
-                gson.toJson(entryList, fwriter);
-                fwriter.flush();
-                fwriter.close();
-
-          System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(entryList));
-                System.out.println(con.getResponseCode());
-                System.out.println(con.getResponseMessage());
-            } catch (IOException ex) {
-                Logger.getLogger(MonitoringEngine.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }
-*/
 
     @Override
     public boolean init() {

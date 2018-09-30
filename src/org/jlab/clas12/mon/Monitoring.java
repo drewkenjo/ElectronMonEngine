@@ -15,52 +15,46 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.groot.data.H1F;
+import org.jlab.groot.data.GraphErrors;
 
 /**
  *
  * @author kenjo
  */
 public class Monitoring {
-    public static void addJLabCert() {
-        String coatdir = System.getenv("COATJAVA");
-        if (coatdir != null) {
-            String storename = coatdir + "/etc/data/keystore/jlab.keystore";
-            File ff = new File(storename);
-
-            if (ff.isFile()) {
-                Properties p = new Properties(System.getProperties());
-                p.setProperty("javax.net.ssl.trustStore", storename);
-                System.setProperties(p);
-            }
-        } else {
-            System.err.println("[Mon12Resources] can't find COATJAVA environment variable");
-            System.err.println("[Mon12Resources] keystore with JLab SSL certif icate can't be added!");
-        }
-    }
-
     static class RunSeriesElement {
         private final String name;
         private final String variation;
         private final int run;
         private final double value;
+        private final double error;
 
-        RunSeriesElement(String name, String variation, int run, double value) {
+        RunSeriesElement(String name, String variation, int run, double value, double error) {
             this.name = name;
             this.variation = variation;
             this.run = run;
             this.value = value;
+            this.error = error;
         }
     }
 
     public static void upload(String name, String variation, int run, double value) {
+        upload(name, variation, run, value, 0);
+    }
+
+
+    public static void upload(String name, String variation, int run, double value, double error) {
         Gson gson = new Gson();
-        RunSeriesElement entry = new RunSeriesElement(name, variation, run, value);
+        RunSeriesElement entry = new RunSeriesElement(name, variation, run, value, error);
 
         try {
             String homedir = System.getenv("HOME");
@@ -94,20 +88,76 @@ public class Monitoring {
 
 
     public static void upload(H1F h1, String variation) {
-        Gson gson = new Gson();
-        Map<String, String> entryMap = new HashMap<>();
+        Map<String, Object> entryMap = new HashMap<>();
         entryMap.put("name", h1.getName());
-        entryMap.put("title", h1.getTitle());
-        entryMap.put("xtitle", h1.getTitleX());
-        entryMap.put("ytitle", h1.getTitleY());
         entryMap.put("variation", variation);
-        StringBuilder data = new StringBuilder("[");
-        for(int ibin=0;ibin< h1.getDataSize(0);ibin++) {
-            data.append("[" + h1.getXaxis().getBinCenter(ibin) + ", " + h1.getBinContent(ibin) + "], ");
+
+        Map<String, Object> dataMap = new HashMap<>();
+        dataMap.put("title", h1.getTitle());
+        dataMap.put("xtitle", h1.getTitleX());
+        dataMap.put("ytitle", h1.getTitleY());
+
+        List<Map<String, Object>> seriesList = new ArrayList<>();
+        Map<String, Object> serieMap = new HashMap<>();
+        List<List<Double>> data = new ArrayList<>();
+        for (int ibin = 0; ibin < h1.getDataSize(0); ibin++) {
+            data.add(Arrays.asList(h1.getXaxis().getBinCenter(ibin), h1.getBinContent(ibin)));
         }
-        data.setCharAt(data.length()-1, ']');
-        entryMap.put("data", data.toString());
+        serieMap.put("name", h1.getName()+"/"+variation);
+        serieMap.put("type", "column");
+        serieMap.put("data", data);
+        seriesList.add(serieMap);
+        dataMap.put("series", seriesList);
+        entryMap.put("data", dataMap);
+
+        upload(entryMap);
+    }
+
+
+    public static void upload(GraphErrors gr) {
+        upload(gr, "default");
+    }
+
+
+    public static void upload(GraphErrors gr, String variation) {
+        Map<String, Object> entryMap = new HashMap<>();
+        entryMap.put("name", gr.getName());
+        entryMap.put("variation", variation);
+
+        Map<String, Object> dataMap = new HashMap<>();
+        dataMap.put("title", gr.getTitle());
+        dataMap.put("xtitle", gr.getTitleX());
+        dataMap.put("ytitle", gr.getTitleY());
+
+        List<Map<String, Object>> seriesList = new ArrayList<>();
+        Map<String, Object> serieMap = new HashMap<>();
+        List<List<Double>> data = new ArrayList<>();
+        for (int ibin = 0; ibin < gr.getDataSize(0); ibin++) {
+            data.add(Arrays.asList(gr.getDataX(ibin), gr.getDataY(ibin)));
+        }
+        serieMap.put("name", gr.getName()+"/"+variation);
+        serieMap.put("type", "scatter");
+        serieMap.put("data", data);
+        seriesList.add(serieMap);
+         Map<String, Object> errMap = new HashMap<>();
+        List<List<Double>> dataerr = new ArrayList<>();
+        for (int ibin = 0; ibin < gr.getDataSize(0); ibin++) {
+            dataerr.add(Arrays.asList(gr.getDataEX(ibin), gr.getDataEY(ibin)));
+        }
+        errMap.put("name", gr.getName()+"/"+variation);
+        errMap.put("type", "errorbar");
+        errMap.put("data", dataerr);
+        seriesList.add(errMap);
+
+        dataMap.put("series", seriesList);
+        entryMap.put("data", dataMap);
+        upload(entryMap);
+    }
+
+
+    public static void upload(Map mm) {
         try {
+            Gson gson = new Gson();
             String homedir = System.getenv("HOME");
             BufferedReader bufferedReader = new BufferedReader(new FileReader(homedir + "/.clas12mon.token"));
             Map<String, String> tokenMap = gson.fromJson(bufferedReader, Map.class);
@@ -120,12 +170,12 @@ public class Monitoring {
                 con.setRequestMethod("PUT");
                 con.setRequestProperty("token", token);
                 Writer fwriter = new OutputStreamWriter(con.getOutputStream());
-                gson.toJson(entryMap, fwriter);
+                gson.toJson(mm, fwriter);
                 fwriter.flush();
                 fwriter.close();
 
-//				System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(entryMap));
-                System.out.println(h1.getName() + " " + variation);
+//System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(entryMap));
+                System.out.println(mm.get("name") + " " + mm.get("variation"));
                 System.out.println(con.getResponseCode());
                 System.out.println(con.getResponseMessage());
             }
